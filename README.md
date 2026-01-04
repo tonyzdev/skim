@@ -8,6 +8,10 @@ A Claude Code MCP Server that automatically **skims** large command outputs — 
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-MCP%20Server-blueviolet)](https://claude.com/claude-code)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 
+## 💬 Background
+
+This project is a community solution addressing [Claude Code Issue #805](https://github.com/anthropics/claude-code/issues/805) — a feature request for buffering large command outputs locally instead of flooding the AI context.
+
 ## 🎯 The Problem
 
 When AI agents run commands that return large outputs (API responses, database queries, log files), the entire content floods the context window:
