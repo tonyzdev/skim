@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "skim": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp", "python3", "/Users/iuser/clean-context/skim/server.py"]
+    }
+  }
+}

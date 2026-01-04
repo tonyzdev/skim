@@ -1,55 +1,79 @@
 # skim
 
-A Claude Code plugin that **skims** large command outputs - automatically saves them to temp files and returns only the structure/schema to the AI. This reduces context pollution and token usage while preserving full data for detailed inspection when needed.
+A Claude Code MCP Server that **skims** large command outputs - executes commands and returns only the structure/schema to the AI. This reduces context pollution and token usage while preserving full data for detailed inspection when needed.
 
 ## Features
 
-- **Auto-save large outputs** - Bash outputs exceeding 1000 characters are automatically saved
+- **Execute & Skim** - Run commands via `skim_exec`, get only schema for large outputs
 - **Schema extraction** - Returns structure (field names + types) instead of full content
 - **Multi-format support** - JSON, CSV, YAML, XML, plain text
-- **Drill-down capability** - View specific parts of saved data using jq/head/tail
+- **Drill-down capability** - View specific parts of saved data using `skim_drill`
 - **Auto-gitignore** - Temp directory is automatically added to `.gitignore`
 
 ## Installation
 
-```bash
-# Install from GitHub
-claude plugin install skim@your-marketplace
+### Option 1: Add to Claude Code settings
 
-# Or install locally
-claude plugin install ./skim
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "skim": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp", "python3", "/path/to/skim/server.py"]
+    }
+  }
+}
+```
+
+### Option 2: Use .mcp.json in project
+
+Create `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "skim": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp", "python3", "/path/to/skim/server.py"]
+    }
+  }
+}
 ```
 
 ## How It Works
 
 ```
-Bash command produces large output (> 1000 chars)
+AI calls: skim_exec("curl https://api.example.com/users")
     ↓
-PostToolUse Hook intercepts
+MCP Server executes command
     ↓
-Saves to .claude-temp/{timestamp}_{hash}.{json|csv|txt}
+If output > 1000 chars:
+    - Saves to .claude-temp/{timestamp}_{hash}.json
+    - Returns only schema/structure
     ↓
-Returns to AI:
-  - File path
-  - Schema/structure only
-  - Statistics (size, item count)
-  - Usage hints for drill-down
+AI sees only the schema, not the full content
     ↓
-AI can use /skim:drill to view specific content
+AI can use skim_drill to view specific content
 ```
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `skim_exec(command)` | Execute command, return schema if output is large |
+| `skim_drill(file_path, query)` | View specific content from saved files |
+| `skim_list()` | List all cached temp files |
+| `skim_clean(older_than_hours)` | Clean up temp files |
 
 ## Example
 
-When a Bash command returns a large JSON response:
+**Using skim_exec:**
+```
+> skim_exec("curl https://api.example.com/users")
 
-**Before (without skim):**
-```
-AI sees entire 500KB response, consuming context window
-```
-
-**After (with skim):**
-```
-Large output saved: .claude-temp/20240104_143052_abc123.json
+Saved: .claude-temp/20240104_143052_abc123.json
 
 Structure (JSON):
 {
@@ -59,18 +83,19 @@ Structure (JSON):
 
 Stats: 512KB | 1000 items | JSON
 
-View details:
-  jq '.' .claude-temp/20240104_143052_abc123.json           # Full content
-  jq '.users[0]' .claude-temp/20240104_143052_abc123.json   # First user
+Use skim_drill to view specific content.
 ```
 
-## Skills
+**Using skim_drill:**
+```
+> skim_drill(".claude-temp/20240104_143052_abc123.json", ".users[0]")
 
-| Skill | Description |
-|-------|-------------|
-| `/skim:drill` | View specific content from saved files using jq/JSONPath |
-| `/skim:list` | List all cached temp files |
-| `/skim:clean` | Clean up temp directory |
+{
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+```
 
 ## Supported Formats
 
@@ -90,19 +115,21 @@ View details:
 
 ## Configuration
 
-Edit `scripts/post-tool-handler.py` to customize:
+Edit `server.py` to customize:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `THRESHOLD` | 1000 | Character count to trigger save |
+| `THRESHOLD` | 1000 | Character count to trigger skim |
 | `MAX_SCHEMA_DEPTH` | 3 | Max depth for schema extraction |
 | `ARRAY_SAMPLE_SIZE` | 1 | Number of array items to sample |
 | `TEMP_DIR` | `.claude-temp` | Temp directory name |
 
 ## Requirements
 
-- Python 3.6+
-- `jq` (recommended, usually pre-installed on macOS/Linux)
+- Python 3.8+
+- `uv` (for running with mcp dependency)
+
+Install uv: `brew install uv` (macOS) or `pip install uv`
 
 ## License
 
