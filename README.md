@@ -165,7 +165,7 @@ PRs welcome! Ideas for improvement:
 
 ## 📄 License
 
-MIT © 2024
+MIT © 2026
 
 ---
 
