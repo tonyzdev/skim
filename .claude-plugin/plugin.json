@@ -1,0 +1,10 @@
+{
+  "name": "skim",
+  "version": "1.0.0",
+  "description": "Skim large outputs - auto-save to temp files, return only schema/structure to AI. Reduces context pollution and token usage.",
+  "author": {
+    "name": "iuser"
+  },
+  "keywords": ["skim", "context", "optimization", "schema", "large-output", "token-saver"],
+  "hooks": "./hooks/hooks.json"
+}
